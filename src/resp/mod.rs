@@ -18,17 +18,23 @@
 mod decode;
 mod encode;
 
-use std::{collections::BTreeMap, ops::{Deref, DerefMut}};
+use std::{
+    collections::BTreeMap,
+    ops::{Deref, DerefMut},
+};
 
+use bytes::BytesMut;
 use enum_dispatch::enum_dispatch;
+use thiserror::Error;
 
- #[enum_dispatch]
+#[enum_dispatch]
 pub trait RespEncode {
     fn encode(self) -> Vec<u8>;
 }
 
-pub trait RespDecode {
-    fn decode(buf: Self) -> Result<RespFrame, String>;
+pub trait RespDecode: Sized {
+    const PREFIX: &'static str;
+    fn decode(buf: &mut BytesMut) -> Result<Self, RespError>;
 }
 
 #[enum_dispatch(RespEncode)]
@@ -46,6 +52,30 @@ pub enum RespFrame {
     Double(f64),
     Map(RespMap),
     Set(RespSet),
+}
+
+#[derive(Debug, PartialEq, Error, Eq)]
+pub enum RespError {
+    #[error("Invalid frame: {0}")]
+    InvalidFrame(String),
+
+    #[error("Invalid frame type: {0}")]
+    InvalidFrameType(String),
+
+    #[error("Invalid frame length: {0}")]
+    InvalidFrameLength(isize),
+
+    #[error("Frame not complete")]
+    NotComplete,
+
+    #[error("Parse error: {0}")]
+    ParseIntError(#[from] std::num::ParseIntError),
+
+    #[error("utf Parse error: {0}")]
+    Utf8Error(#[from] std::string::FromUtf8Error),
+
+    #[error("Parse float error: {0}")]
+    ParseFloateError(#[from] std::num::ParseFloatError),
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -77,7 +107,6 @@ pub struct BulkString(Vec<u8>);
 
 #[derive(Debug, PartialEq, Eq, PartialOrd)]
 pub struct RespNull;
-
 
 impl Deref for SimpleString {
     type Target = String;
@@ -166,5 +195,11 @@ impl RespMap {
 impl RespSet {
     pub fn new(s: impl Into<Vec<RespFrame>>) -> Self {
         RespSet(s.into())
+    }
+}
+
+impl From<&str> for SimpleString {
+    fn from(s: &str) -> Self {
+        SimpleString(s.to_string())
     }
 }
