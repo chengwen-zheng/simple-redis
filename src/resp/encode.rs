@@ -157,7 +157,6 @@ mod tests {
         assert_eq!(frame.encode(), b"-Error message\r\n");
     }
 
-
     #[test]
     fn test_integer_encode() {
         let frame: RespFrame = 123.into();
@@ -223,7 +222,6 @@ mod tests {
 
         let frame: RespFrame = (-1.23456e-9).into();
         assert_eq!(&frame.encode(), b",-1.23456e-9\r\n");
-        
     }
 
     #[test]
@@ -254,5 +252,4 @@ mod tests {
             b"~2\r\n*2\r\n:+1234\r\n#t\r\n$5\r\nworld\r\n"
         );
     }
-
 }

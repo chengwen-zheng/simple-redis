@@ -35,6 +35,7 @@ pub trait RespEncode {
 pub trait RespDecode: Sized {
     const PREFIX: &'static str;
     fn decode(buf: &mut BytesMut) -> Result<Self, RespError>;
+    fn expect_length(buf: &[u8]) -> Result<usize, RespError>;
 }
 
 #[enum_dispatch(RespEncode)]
@@ -192,6 +193,12 @@ impl RespMap {
     }
 }
 
+impl Default for RespMap {
+    fn default() -> Self {
+        RespMap::new()
+    }
+}
+
 impl RespSet {
     pub fn new(s: impl Into<Vec<RespFrame>>) -> Self {
         RespSet(s.into())
@@ -201,5 +208,48 @@ impl RespSet {
 impl From<&str> for SimpleString {
     fn from(s: &str) -> Self {
         SimpleString(s.to_string())
+    }
+}
+
+
+impl From<&str> for RespFrame {
+    fn from(s: &str) -> Self {
+        SimpleString(s.to_string()).into()
+    }
+}
+
+impl From<&str> for SimpleError {
+    fn from(s: &str) -> Self {
+        SimpleError(s.to_string())
+    }
+}
+
+impl From<&str> for BulkString {
+    fn from(s: &str) -> Self {
+        BulkString(s.as_bytes().to_vec())
+    }
+}
+
+impl From<&[u8]> for BulkString {
+    fn from(s: &[u8]) -> Self {
+        BulkString(s.to_vec())
+    }
+}
+
+impl From<&[u8]> for RespFrame {
+    fn from(s: &[u8]) -> Self {
+        BulkString(s.to_vec()).into()
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for BulkString {
+    fn from(s: &[u8; N]) -> Self {
+        BulkString(s.to_vec())
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for RespFrame {
+    fn from(s: &[u8; N]) -> Self {
+        BulkString(s.to_vec()).into()
     }
 }
