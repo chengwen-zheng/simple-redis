@@ -17,7 +17,6 @@ impl CommandExecutor for Set {
     }
 }
 
-
 impl TryFrom<RespArray> for Get {
     type Error = CommandError;
     fn try_from(value: RespArray) -> Result<Self, Self::Error> {
