@@ -19,6 +19,12 @@ impl RespEncode for RespNullArray {
     }
 }
 
+impl From<Vec<RespFrame>> for RespArray {
+    fn from(s: Vec<RespFrame>) -> Self {
+        RespArray(s)
+    }
+}
+
 impl RespDecode for RespNullArray {
     const PREFIX: &'static str = "*";
 

@@ -10,7 +10,7 @@ use crate::{RespDecode, RespEncode, RespError, RespFrame, SimpleString};
 use super::{calc_total_length, parse_length, BUF_CAP, CRLF_LEN};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
-pub struct RespMap(BTreeMap<String, RespFrame>);
+pub struct RespMap(pub(crate) BTreeMap<String, RespFrame>);
 
 impl RespDecode for RespMap {
     const PREFIX: &'static str = "%";
@@ -52,6 +52,12 @@ impl RespEncode for RespMap {
             buf.extend_from_slice(&value.encode());
         }
         buf
+    }
+}
+
+impl From<BTreeMap<String, RespFrame>> for RespMap {
+    fn from(map: BTreeMap<String, RespFrame>) -> Self {
+        RespMap(map)
     }
 }
 impl Deref for RespMap {
